@@ -10,7 +10,7 @@ df_copom['data_decisao'] = pd.to_datetime(df_copom['data_decisao'])
 df_copom = df_copom.sort_values('data_decisao').reset_index(drop=True)
 
 # Calcula a direção real do movimento (corte / alta / manutenção)
-# comparando a Selic decidida nesta reunião com a da reunião anterior
+# comparando a Selic decidida nesta reunião com a 'da reunião anterior
 df_copom['selic_anterior'] = df_copom['selic_nova'].shift(1)
 
 def classifica_direcao(row):
@@ -139,5 +139,5 @@ for ticker in lista_ativos:
 # 5. Salva tudo em CSV (formato "lista de arestas" do grafo bipartido)
 # =========================================================
 df_resultado = pd.DataFrame(linhas_resultado)
-df_resultado.to_csv("arestas_impacto_selic.csv", index=False)
-print(f"\nArquivo 'arestas_impacto_selic.csv' salvo com {len(df_resultado)} linhas (arestas).")
+df_resultado.to_csv("arestas_final.csv", index=False)
+print(f"\nArquivo 'arestas_final.csv' salvo com {len(df_resultado)} linhas (arestas).")
