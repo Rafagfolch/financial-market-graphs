@@ -1,105 +1,98 @@
-"""
-Grafo 1 - Grafo bipartido Ações x Eventos (reuniões do COPOM)
-
-V = ações (23 ativos)
-W = eventos (reuniões do COPOM, 2020-2025)
-Aresta (v, w) com peso = % de impacto no preço da ação na janela T-1 -> T+1
-
-Este script:
-1. Constrói o grafo bipartido a partir do CSV de arestas
-2. Calcula medidas de centralidade adaptadas ao caso (grafo ponderado e completo)
-3. Exporta um resumo para uso no relatório
-"""
-
 import pandas as pd
 import networkx as nx
 
-# =========================================================
-# 1. Carregar dados e construir o grafo bipartido
-# =========================================================
-df = pd.read_csv("arestas_final.csv")
+def carregar_dados(caminho_arquivo):
+    return pd.read_csv(caminho_arquivo)
 
-G = nx.Graph()
+def construir_grafo_bipartido(dados):
+    grafo = nx.Graph()
+    
+    eventos = dados['evento'].unique()
+    ativos = dados['ativo'].unique()
+    
+    grafo.add_nodes_from(eventos, bipartite=0)
+    grafo.add_nodes_from(ativos, bipartite=1)
+    
+    for _, linha in dados.iterrows():
+        grafo.add_edge(
+            linha['evento'], 
+            linha['ativo'], 
+            peso=linha['peso'],
+            impacto=linha['impacto']
+        )
+        
+    return grafo, set(eventos), set(ativos)
 
-# Nós do tipo "ação" (bipartite=0) e do tipo "evento" (bipartite=1)
-acoes = df['ticker'].unique().tolist()
-eventos = df['data_reuniao'].unique().tolist()
+def calcular_metricas(grafo, nos_eventos):
+    centralidade = nx.bipartite.degree_centrality(grafo, nos_eventos)
+    emparelhamento = nx.bipartite.maximum_matching(grafo, top_nodes=nos_eventos)
+    cobertura = nx.bipartite.to_vertex_cover(grafo, emparelhamento)
+    
+    return centralidade, emparelhamento, cobertura
 
-G.add_nodes_from(acoes, bipartite=0, tipo='acao')
-G.add_nodes_from(eventos, bipartite=1, tipo='evento')
+def exportar_resultados(centralidade, emparelhamento, cobertura, nos_eventos, caminho_saida):
+    linhas = []
+    
+    for no, valor in centralidade.items():
+        tipo = 'Evento' if no in nos_eventos else 'Ativo'
+        linhas.append({'No': no, 'Tipo': tipo, 'Metrica': 'Centralidade', 'Valor': round(valor, 4)})
+        
+    for origem, destino in emparelhamento.items():
+        if origem in nos_eventos:
+            linhas.append({'No': origem, 'Tipo': 'Evento', 'Metrica': 'Emparelhamento', 'Valor': destino})
+            
+    for no in cobertura:
+        tipo = 'Evento' if no in nos_eventos else 'Ativo'
+        linhas.append({'No': no, 'Tipo': tipo, 'Metrica': 'Cobertura', 'Valor': 'Necessario_Monitorar'})
+        
+    df_resultados = pd.DataFrame(linhas)
+    df_resultados.to_csv(caminho_saida, index=False)
 
-# Arestas com peso = impacto percentual (guardamos o valor absoluto como peso
-# "de intensidade", mas guardamos também o sinal original como atributo,
-# já que para centralidade/cobertura/emparelhamento normalmente interessa
-# a MAGNITUDE do impacto, não a direção)
-for _, row in df.iterrows():
-    G.add_edge(
-        row['ticker'],
-        row['data_reuniao'],
-        peso=abs(row['impacto_pct']),       # magnitude (usada nos algoritmos)
-        impacto_pct=row['impacto_pct'],     # valor original com sinal
-        direcao_selic=row['direcao'],
-    )
+def executar():
+    try:
+        dados = carregar_dados('arestas_final.csv')
+        
+        # 1. Renomeia as colunas do CSV para o padrão que a função do grafo espera
+        dados = dados.rename(columns={
+            'data_reuniao': 'evento',
+            'ticker': 'ativo',
+            'impacto_pct': 'impacto'
+        })
+        
+        # 2. Cria a coluna 'peso' usando o valor absoluto do impacto (módulo)
+        dados['peso'] = dados['impacto'].abs()
+        
+        dados = dados[dados['peso'] > 3.0]
+        
+    except FileNotFoundError:
+        # Dados de teste caso o ficheiro não seja encontrado no diretório
+        print(" Ficheiro 'arestas_final.csv' não encontrado. A gerar dados de teste...")
+        dados = pd.DataFrame({
+            'evento': ['Reuniao_Normal', 'Reuniao_Crise_A', 'Reuniao_Crise_B', 'Pandemia'],
+            'ativo': ['ITUB4.SA', 'PETR4.SA', 'MGLU3.SA', 'CVCB3.SA'],
+            'impacto': [1.2, -0.5, -5.1, 12.8]
+        })
+        dados['peso'] = dados['impacto'].abs()
+        # Aplica o mesmo filtro nos dados de teste
+        dados = dados[dados['peso'] > 3.0]
+        
+    # Verifica se sobraram dados após o filtro (para evitar que o NetworkX falhe)
+    if dados.empty:
+        print("❌ O grafo está vazio. Nenhum ativo teve um impacto superior a 3%.")
+        return
 
-print(f"Grafo bipartido construído:")
-print(f"  Nós (ações): {len(acoes)}")
-print(f"  Nós (eventos): {len(eventos)}")
-print(f"  Arestas: {G.number_of_edges()}")
-print(f"  É bipartido? {nx.is_bipartite(G)}")
+    # Constrói o grafo apenas com os choques de mercado filtrados
+    grafo, eventos, ativos = construir_grafo_bipartido(dados)
+    
+    # Verifica se a estrutura matemática obedece à regra de um grafo bipartido
+    if nx.is_bipartite(grafo):
+        cent, emp, cob = calcular_metricas(grafo, eventos)
+        exportar_resultados(cent, emp, cob, eventos, 'resultados_bipartido.csv')
+        print(" Grafo processado com sucesso!")
+        print("O filtro de >3% foi aplicado e eliminou o ruído do mercado.")
+        print("Métricas limpas exportadas para 'resultados_bipartido.csv'.")
+    else:
+        print(" Erro: A estrutura gerada não é um grafo bipartido válido.")
 
-# =========================================================
-# 2. Centralidade de grau ponderada (degree centrality ponderado)
-#    Para cada ação: soma das magnitudes de impacto em todos os eventos
-#    -> quanto maior, mais "sensível à Selic" essa ação é, no agregado
-# =========================================================
-centralidade_grau_ponderada = {}
-for no in G.nodes():
-    soma_pesos = sum(dados['peso'] for _, _, dados in G.edges(no, data=True))
-    centralidade_grau_ponderada[no] = soma_pesos
-
-# Separar ranking de ações (mais sensíveis à Selic) e eventos (mais impactantes)
-ranking_acoes = sorted(
-    [(n, v) for n, v in centralidade_grau_ponderada.items() if n in acoes],
-    key=lambda x: x[1], reverse=True
-)
-ranking_eventos = sorted(
-    [(n, v) for n, v in centralidade_grau_ponderada.items() if n in eventos],
-    key=lambda x: x[1], reverse=True
-)
-
-print("\nTop 5 ações mais sensíveis à Selic (soma de |impacto| em todas reuniões):")
-for ticker, valor in ranking_acoes[:5]:
-    print(f"  {ticker}: {valor:.2f}")
-
-print("\nTop 5 reuniões do COPOM com maior impacto agregado no mercado:")
-for data, valor in ranking_eventos[:5]:
-    print(f"  {data}: {valor:.2f}")
-
-# =========================================================
-# 3. Centralidade de autovetor (eigenvector centrality)
-#    Em grafo bipartido ponderado, identifica ações/eventos que são
-#    centrais não só pela soma bruta, mas pela conexão com OUTROS nós
-#    que também são centrais (efeito de propagação)
-# =========================================================
-try:
-    centralidade_autovetor = nx.eigenvector_centrality(G, weight='peso', max_iter=1000)
-    ranking_autovetor_acoes = sorted(
-        [(n, v) for n, v in centralidade_autovetor.items() if n in acoes],
-        key=lambda x: x[1], reverse=True
-    )
-    print("\nTop 5 ações por centralidade de autovetor:")
-    for ticker, valor in ranking_autovetor_acoes[:5]:
-        print(f"  {ticker}: {valor:.4f}")
-except nx.PowerIterationFailedConvergence:
-    print("\n[aviso] Eigenvector centrality não convergiu - considerar normalizar pesos.")
-
-# =========================================================
-# 4. Exporta resumo para uso no relatório / próximas etapas
-# =========================================================
-resumo = pd.DataFrame(ranking_acoes, columns=['ticker', 'centralidade_grau_ponderada'])
-resumo.to_csv("centralidade_acoes.csv", index=False)
-
-resumo_eventos = pd.DataFrame(ranking_eventos, columns=['data_reuniao', 'centralidade_grau_ponderada'])
-resumo_eventos.to_csv("centralidade_eventos.csv", index=False)
-
-print("\nArquivos salvos: centralidade_acoes.csv, centralidade_eventos.csv")
+if __name__ == "__main__":
+    executar()
