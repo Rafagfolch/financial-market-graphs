@@ -1,15 +1,14 @@
 import pandas as pd
 import math
 
-
 REGIMES_SELIC = [
-    ("Regime_1", "2020-02-05", "2020-08-05"),  
+    ("Regime_1", "2020-02-05", "2020-08-05"), 
     ("Regime_2", "2020-09-16", "2021-01-20"),  
-    ("Regime_3", "2021-03-17", "2022-08-03"), 
-    ("Regime_4", "2022-09-21", "2023-06-21"),  
-    ("Regime_5", "2023-08-02", "2024-05-08"),  
+    ("Regime_3", "2021-03-17", "2022-08-03"),  
+    ("Regime_4", "2022-09-21", "2023-06-21"), 
+    ("Regime_5", "2023-08-02", "2024-05-08"), 
     ("Regime_6", "2024-06-19", "2024-07-31"),  
-    ("Regime_7", "2024-09-18", "2025-06-18"),  
+    ("Regime_7", "2024-09-18", "2025-06-18"), 
     ("Regime_8", "2025-07-30", "2025-12-10"), 
 ]
 
@@ -21,10 +20,9 @@ def atribuir_regime(data):
             return nome
     return None
 
-
 def calcular_distancias_mantegna(df_regime, col_data, col_val):
     tabela_dinamica = df_regime.pivot_table(index=col_data, columns='ticker', values=col_val)
-    tabela_dinamica = tabela_dinamica.fillna(0)
+    tabela_dinamica = tabela_dinamica.dropna(axis=1, how='all')
 
     matriz_correlacao = tabela_dinamica.corr(method='pearson')
     rotulos = list(matriz_correlacao.columns)
@@ -47,7 +45,6 @@ def calcular_distancias_mantegna(df_regime, col_data, col_val):
 
     return matriz_dist, rotulos
 
-
 def construir_grafo_completo(matriz_dist, rotulos):
     quantidade = len(matriz_dist)
     G = {i: {} for i in range(quantidade)}
@@ -58,7 +55,6 @@ def construir_grafo_completo(matriz_dist, rotulos):
                 G[i][j] = matriz_dist[i][j]
 
     return G
-
 
 def prim(G):
     vertices = list(G.keys())
@@ -87,7 +83,6 @@ def prim(G):
     return T
 
 
-
 def converter_para_lista_adjacencia(T, G):
     MST = {}
     for v, u in T:
@@ -114,7 +109,6 @@ def exportar_arvore(T, G, rotulos, caminho_saida):
     df_arestas.to_csv(caminho_saida, index=False)
 
 
-
 def gerar_8_msts(caminho_retornos_diarios):
     dados = pd.read_csv(caminho_retornos_diarios)
     descartados = ['NTCO3.SA', 'JBSS3.SA', 'AZUL4.SA']
@@ -132,6 +126,7 @@ def gerar_8_msts(caminho_retornos_diarios):
             f"do Davi, e nao o arestas_final.csv do Grafo 1."
         )
 
+  
     dados['regime'] = dados[col_data].apply(atribuir_regime)
     dados = dados.dropna(subset=['regime'])
 
