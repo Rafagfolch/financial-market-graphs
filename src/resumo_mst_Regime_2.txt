@@ -1,0 +1,3 @@
+Custo Total da Arvore Geradora Minima (Regime_2): 16.5816
+Periodo: ['2020-09-16', '2021-01-20']
+Dias de pregao usados: 84

@@ -2,15 +2,13 @@ import pandas as pd
 import yfinance as yf
 from datetime import timedelta
 
-# =========================================================
-# 1. Lendo o CSV de decisões do COPOM
-# =========================================================
+
 df_copom = pd.read_csv("copom decisoes 2020 2025.csv")
 df_copom['data_decisao'] = pd.to_datetime(df_copom['data_decisao'])
 df_copom = df_copom.sort_values('data_decisao').reset_index(drop=True)
 
 # Calcula a direção real do movimento (corte / alta / manutenção)
-# comparando a Selic decidida nesta reunião com a 'da reunião anterior
+# comparando a Selic decidida nesta reunião com a da reunião anterior
 df_copom['selic_anterior'] = df_copom['selic_nova'].shift(1)
 
 def classifica_direcao(row):
@@ -27,9 +25,7 @@ df_copom['direcao'] = df_copom.apply(classifica_direcao, axis=1)
 
 eventos_completos = df_copom
 
-# =========================================================
-# 2. Lista de ativos por setor
-# =========================================================
+
 lista_ativos = [
     # Bancos
     "ITUB4.SA", "BBDC4.SA", "BBAS3.SA", "BPAC11.SA", "SANB11.SA",
@@ -47,19 +43,9 @@ lista_ativos = [
     "BBSE3.SA", "B3SA3.SA"
 ]
 
-# =========================================================
-# 3. Função que pega o preço de fechamento em T-1 e T+1
-# =========================================================
-def preco_t_menos1_t_mais1(ticker, data_evento, janela_busca=10):
-    """
-    Busca uma janela ampla de pregões ao redor da reunião e retorna:
-    - preco_t_menos1: fechamento do último pregão ANTES da data do evento
-    - preco_t_mais1: fechamento do primeiro pregão DEPOIS da data do evento
-    - data_t_menos1, data_t_mais1: as datas reais usadas (pra auditoria)
 
-    Usamos uma janela de busca ampla (ex: 10 dias corridos antes e depois)
-    porque feriados/fins de semana podem deslocar os pregões disponíveis.
-    """
+def preco_t_menos1_t_mais1(ticker, data_evento, janela_busca=10):
+
     inicio_busca = data_evento - timedelta(days=janela_busca)
     fim_busca = data_evento + timedelta(days=janela_busca)
 
@@ -73,7 +59,6 @@ def preco_t_menos1_t_mais1(ticker, data_evento, janela_busca=10):
     if dados.empty:
         return None
 
-    # Normaliza índice de datas (remove timezone se houver)
     dados.index = pd.to_datetime(dados.index).tz_localize(None)
 
     pregoes_antes = dados[dados.index.date < data_evento.date()]
@@ -82,7 +67,6 @@ def preco_t_menos1_t_mais1(ticker, data_evento, janela_busca=10):
     if pregoes_antes.empty or pregoes_depois.empty:
         return None
 
-    # Último pregão antes (T-1) e primeiro pregão depois (T+1)
     linha_t_menos1 = pregoes_antes.iloc[-1]
     linha_t_mais1 = pregoes_depois.iloc[0]
 
@@ -97,9 +81,7 @@ def preco_t_menos1_t_mais1(ticker, data_evento, janela_busca=10):
     }
 
 
-# =========================================================
-# 4. Loop principal: gera o dataset de arestas (ação, evento, peso)
-# =========================================================
+
 linhas_resultado = []
 
 for ticker in lista_ativos:
@@ -135,9 +117,7 @@ for ticker in lista_ativos:
             'impacto_pct': round(variacao, 4),
         })
 
-# =========================================================
-# 5. Salva tudo em CSV (formato "lista de arestas" do grafo bipartido)
-# =========================================================
+
 df_resultado = pd.DataFrame(linhas_resultado)
 df_resultado.to_csv("arestas_final.csv", index=False)
 print(f"\nArquivo 'arestas_final.csv' salvo com {len(df_resultado)} linhas (arestas).")
