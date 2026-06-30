@@ -17,7 +17,7 @@ Especificamente, o projeto busca responder três perguntas:
 2. Quais associações entre eventos específicos e ativos são as mais expressivas?
 3. Como a estrutura de correlação entre os ativos se organiza e se altera ao longo dos diferentes regimes de juros?
 
-O escopo cobre o período de **janeiro de 2020 a dezembro de 2025**, contemplando quatro fases de política monetária: os cortes emergenciais da pandemia (Selic a 2% a.a.), o ciclo de alta de 2021–2022 (até 13,75%), o ciclo de cortes de 2023–2024 e o novo ciclo de alta iniciado no final de 2024. A análise é restrita a eventos domésticos (decisões do COPOM); eventos internacionais não fazem parte do escopo, por decisão do grupo.
+O escopo cobre o período de **janeiro de 2020 a dezembro de 2025**, contemplando quatro fases de política monetária: os cortes emergenciais da pandemia (Selic a 2% a.a.), o ciclo de alta de 2021–2022 (até 13,75%), o ciclo de cortes de 2023–2024 e o novo ciclo de alta iniciado no final de 2024. A análise é restrita a eventos domésticos (decisões do COPOM); eventos internacionais não fazem parte do escopo.
 
 ## 2. Abordagem
 
