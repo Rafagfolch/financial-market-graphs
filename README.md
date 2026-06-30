@@ -110,9 +110,9 @@ financial-market-graphs/
 │   ├── figura_didatica_mst_regime1 … regime8.* # visualizações individuais de cada MST
 │   └── figura_mst_regime1 … regime8.*          # visualizações individuais de cada MST
 │
-├── Slides_Grafos.pdf                         # slides para apresentação
 ├── LICENSE
-└── README.md
+├── README.md
+└── Slides_Grafos.pdf                         # slides para apresentação
 ```
 
 ## 5. Execução
