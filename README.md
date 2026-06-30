@@ -95,7 +95,7 @@ financial-market-graphs/
 │   ├── coleta_impacto_selic_v2.py           # cálculo do peso das arestas por reunião
 │   ├── grafo_bipartido.py                   # construção do Grafo 1: centralidade de grau/autovetor, epicentros
 │   ├── arvoreGerado.py                      # construção do Grafo 2: distância de Mantegna, Prim, comunidades
-│   ├── main.py                              # pipeline de integração: epicentros (G1) × barreira de contágio (G2)
+│   ├── main.py                              # integração: epicentros (G1) × barreira de contágio (G2)
 │   ├── visualizar_grafo_bipartido.py        # geração da amostra do grafo bipartido
 │   ├── visualizar_grafo_completo_vs_mst.py  # geração grafo completo × MST por regime
 │   └── visualizar_grafos_mst.py             # geração das figuras didáticas individuais de cada MST por regime
@@ -114,7 +114,7 @@ financial-market-graphs/
 └── README.md
 ```
 
-## 5. Pipeline de execução
+## 5. Execução
 
 Os scripts em `src/` rodam nessa ordem:
 
