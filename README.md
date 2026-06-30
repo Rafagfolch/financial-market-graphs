@@ -87,17 +87,17 @@ financial-market-graphs/
 │   ├── copom_decisoes_2020_2025.csv         # calendário e direção das 48 reuniões do COPOM
 │   ├── bipartido_arestas.csv                # arestas do Grafo 1 com pesos calculados
 │   ├── arestas_final.csv                    # dataset consolidado final usado nas análises
-│   ├── amostra_bipartido.csv                # amostra ilustrativa do Grafo 1 (Figura 1 do relatório)
+│   ├── amostra_bipartido.csv                # amostra ilustrativa do Grafo 1 
 │   └── discussao_critica_integrada.csv      # tabela de apoio à discussão crítica dos resultados
 │
 ├── src/
 │   ├── coleta_precos_diarios.py             # coleta de preços via yfinance e geração dos CSVs de preços/retornos
-│   ├── coleta_impacto_selic_v2.py           # cálculo do peso das arestas (impacto % T-1 → T+1) por reunião
+│   ├── coleta_impacto_selic_v2.py           # cálculo do peso das arestas por reunião
 │   ├── grafo_bipartido.py                   # construção do Grafo 1: centralidade de grau/autovetor, epicentros
 │   ├── arvoreGerado.py                      # construção do Grafo 2: distância de Mantegna, Prim, comunidades
 │   ├── main.py                              # pipeline de integração: epicentros (G1) × barreira de contágio (G2)
-│   ├── visualizar_grafo_bipartido.py        # geração da Figura 1 (amostra do grafo bipartido)
-│   ├── visualizar_grafo_completo_vs_mst.py  # geração das Figuras 2 e 3 (grafo completo × MST por regime)
+│   ├── visualizar_grafo_bipartido.py        # geração da amostra do grafo bipartido
+│   ├── visualizar_grafo_completo_vs_mst.py  # geração grafo completo × MST por regime
 │   └── visualizar_grafos_mst.py             # geração das figuras didáticas individuais de cada MST por regime
 │
 ├── results/
@@ -107,10 +107,9 @@ financial-market-graphs/
 │
 ├── docs/
 │   ├── figura_bipartido_amostra.*             # Figura 1 do relatório
-│   ├── figura_didatica_mst_regime1 … regime8.* # Figuras 2 e 3 do relatório (grafo completo × MST, didáticas)
+│   ├── figura_didatica_mst_regime1 … regime8.* # visualizações individuais de cada MST
 │   └── figura_mst_regime1 … regime8.*          # visualizações individuais de cada MST
 │
-├── Relatorio_CMAC03.pdf                       # relatório técnico completo (formato artigo, padrão IMC/UNIFEI)
 ├── LICENSE
 └── README.md
 ```
